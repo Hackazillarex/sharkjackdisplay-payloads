@@ -19,28 +19,28 @@ get_config_options() {
 }
 
 show_settings() {
-  ALERT "NETMODE: SCAN_NETMODE\nTarget: SCAN_TARGET\nScan: $NMAP_SCAN\nRetries: $MAX_RETRIES\nTimeout: $HOST_TIMEOUT" 3 false true
+  ALERT "NETMODE:\n$SCAN_NETMODE\nTarget: $SCAN_TARGET\n\nScan: $NMAP_SCAN\nRetries: $MAX_RETRIES\nTimeout: $HOST_TIMEOUT" -1 false true
 }
 
-source /usr/bin/list_tools
+source /usr/lib/list_tools
 initialize_menu() {
-  add_menu_item "Execute Scan" "execute_scan"
-  add_menu_item "Scan Settings" "menu_settings"
-  add_menu_item "Profile" "render_menu_profile"
-  add_menu_item "Quit Payload" "exit_menu"
+  ADD_MENU_ITEM "Start Scan" "execute_scan"
+  ADD_MENU_ITEM "Scan Settings" "menu_settings"
+  ADD_MENU_ITEM "Profile" "render_menu_profile"
+  ADD_MENU_ITEM "Quit Payload" "EXIT_MENU"
 
-  add_submenu_item "menu_settings" "NETMODE" "set_netmode"
-  add_submenu_item "menu_settings" "Target" "set_target"
-  add_submenu_item "menu_settings" "Scan Type" "set_scan_type"
-  add_submenu_item "menu_settings" "Max Retries" "set_max_retries"
-  add_submenu_item "menu_settings" "Host Timeout" "set_host_timeout"
-  add_submenu_item "menu_settings" "Save as Profile" "menu_save_profile"
-  add_submenu_item "menu_settings" "← Back"
+  ADD_SUBMENU_ITEM "menu_settings" "NETMODE" "set_netmode"
+  ADD_SUBMENU_ITEM "menu_settings" "Target" "set_target"
+  ADD_SUBMENU_ITEM "menu_settings" "Scan Type" "set_scan_type"
+  ADD_SUBMENU_ITEM "menu_settings" "Max Retries" "set_max_retries"
+  ADD_SUBMENU_ITEM "menu_settings" "Host Timeout" "set_host_timeout"
+  ADD_SUBMENU_ITEM "menu_settings" "Show Settings" "show_settings"
+  ADD_SUBMENU_ITEM "menu_settings" "Save as Profile" "menu_save_profile"
+  ADD_SUBMENU_ITEM "menu_settings" "← Back"
 
-  add_submenu_item "menu_save_profile" "Default Profile" "save_as_default_profile"
-  add_submenu_item "menu_save_profile" "New Profile" "save_as_new_profile"
-  add_submenu_item "menu_save_profile" "Existing Profile" "save_as_existing_profile"
-  add_submenu_item "menu_save_profile" "← Back"
+  ADD_SUBMENU_ITEM "menu_save_profile" "Save Default" "save_as_default_profile"
+  ADD_SUBMENU_ITEM "menu_save_profile" "Save As..." "save_as_new_profile"
+  ADD_SUBMENU_ITEM "menu_save_profile" "← Back"
 }
 
 save_as_new_profile() {
@@ -50,29 +50,33 @@ save_as_new_profile() {
     return
   fi
   PROFILE="${profile_name}.cfg"
-  NMAP_SCAN="$(SET_PAYLOAD_CONFIG_OPTION NMAP_SCAN "-sL" $PROFILE)"
-  HOST_TIMEOUT="$(SET_PAYLOAD_CONFIG_OPTION HOST_TIMEOUT "30s" $PROFILE)"
-  MAX_RETRIES="$(SET_PAYLOAD_CONFIG_OPTION MAX_RETRIES "2" $PROFILE)"
-  SCAN_NETMODE="$(SET_PAYLOAD_CONFIG_OPTION SCAN_NETMODE "DHCP_CLIENT" $PROFILE)"
-  SCAN_TARGET="$(SET_PAYLOAD_CONFIG_OPTION SCAN_TARGET "SUBNET" $PROFILE)"
+  NMAP_SCAN="$(SET_PAYLOAD_CONFIG_OPTION NMAP_SCAN "$NMAP_SCAN" $PROFILE)"
+  HOST_TIMEOUT="$(SET_PAYLOAD_CONFIG_OPTION HOST_TIMEOUT "$HOST_TIMEOUT" $PROFILE)"
+  MAX_RETRIES="$(SET_PAYLOAD_CONFIG_OPTION MAX_RETRIES "$MAX_RETRIES" $PROFILE)"
+  SCAN_NETMODE="$(SET_PAYLOAD_CONFIG_OPTION SCAN_NETMODE "$SCAN_NETMODE" $PROFILE)"
+  SCAN_TARGET="$(SET_PAYLOAD_CONFIG_OPTION SCAN_TARGET "$SCAN_TARGET" $PROFILE)"
   ALERT "Profile: $PROFILE Saved" 3 false
+  get_config_options
 }
 
 save_as_default_profile() {
   PROFILE="profile.cfg"
-  NMAP_SCAN="$(SET_PAYLOAD_CONFIG_OPTION NMAP_SCAN "-sL" $PROFILE)"
-  HOST_TIMEOUT="$(SET_PAYLOAD_CONFIG_OPTION HOST_TIMEOUT "30s" $PROFILE)"
-  MAX_RETRIES="$(SET_PAYLOAD_CONFIG_OPTION MAX_RETRIES "2" $PROFILE)"
-  SCAN_NETMODE="$(SET_PAYLOAD_CONFIG_OPTION SCAN_NETMODE "DHCP_CLIENT" $PROFILE)"
-  SCAN_TARGET="$(SET_PAYLOAD_CONFIG_OPTION SCAN_TARGET "SUBNET" $PROFILE)"
+  NMAP_SCAN="$(SET_PAYLOAD_CONFIG_OPTION NMAP_SCAN "$NMAP_SCAN" $PROFILE)"
+  HOST_TIMEOUT="$(SET_PAYLOAD_CONFIG_OPTION HOST_TIMEOUT "$HOST_TIMEOUT" $PROFILE)"
+  MAX_RETRIES="$(SET_PAYLOAD_CONFIG_OPTION MAX_RETRIES "$MAX_RETRIES" $PROFILE)"
+  SCAN_NETMODE="$(SET_PAYLOAD_CONFIG_OPTION SCAN_NETMODE "$SCAN_NETMODE" $PROFILE)"
+  SCAN_TARGET="$(SET_PAYLOAD_CONFIG_OPTION SCAN_TARGET "$SCAN_TARGET" $PROFILE)"
+  ALERT "Default Profile Saved" 3 false
+  get_config_options
 }
 
 render_menu_profile() {
-  RESP="$(PROFILE_CONFIG_MENU)"
+  RESP="$(PAYLOAD_CONFIG_MENU)"
   if [ "$RESP" = "← Back" ]; then
     return
   fi
   PROFILE="$RESP"
+  logger -t "nmap-payload" "Loaded profile: $PROFILE"
   get_config_options
   show_settings
 }
@@ -233,8 +237,8 @@ execute_scan() {
   # Wait for Ethernet link
   WAIT_FOR_LINK
   echo "nmap $NMAP_COMMAND" > $LOOT_DIR/scan-$COUNT.txt
-  source /usr/bin/progress_bar_tools
-  create_progress_bar "Scanning"
+  source /usr/lib/progress_bar_tools
+  CREATE_PROGRESS_BAR "Scanning"
   nmap $NMAP_COMMAND >> $LOOT_DIR/scan-$COUNT.txt &
   pidof_nmap=$!
   logger -t "nmap-payload" "nmap $NMAP_COMMAND > $LOOT_DIR/scan-$COUNT.txt"
@@ -245,10 +249,10 @@ execute_scan() {
     logger -t PAYLOAD "progress $COMPLETE"
     COMPLETE="$(cat "$LOOT_DIR/scan-$COUNT.txt"|grep "remaining" | awk '{print $6}' | tail -n1 | cut -d'.' -f1)"
     if [ -z "$(ps | grep $pidof_nmap | grep -v grep)" ]; then
-      set_progress 100
+      SET_PROGRESS 100
       break
     fi
-    set_progress $COMPLETE
+    SET_PROGRESS $COMPLETE
   done
   results_alert
 }
@@ -272,6 +276,10 @@ results_alert() {
       HOSTS_FOUND="$(cat "$LOOT_DIR/scan-$COUNT.txt" | grep "Nmap scan report for" | grep "(" | wc -l)"
       ALERT "Scan $COUNT Done. \nHost count $HOSTS_FOUND" 2
       ALERT "Scan $COUNT Done. \nHost count $HOSTS_FOUND" -1 false
+      RESP="$(OPTION_DIALOG "View Results?" "Yes" "No")"
+      if [ "$RESP" = "Yes" ]; then
+        show_results_list
+      fi
     ;;
     # Discovery
     "-sn")
@@ -327,32 +335,61 @@ results_alert() {
   #show_results
 }
 
+show_results_list() {
+  #RESULTS="$(cat $LOOT_DIR/scan-$COUNT.txt | grep "Nmap scan report for" | grep '(')"
+  #while IFS= read -r line; do
+  grep "Nmap scan report for" "$LOOT_DIR/scan-$COUNT.txt" | grep "(" | while IFS= read -r line; do
+    # Skip empty lines
+    [[ -z "$line" ]] && continue
+    # Extract the hostname (between "Nmap scan report for " and the first space)
+    # TODO duplicate and blank host names
+    hostname="$(echo "$line" | grep "Nmap scan report for" | grep "(" | awk {'print $5'})"
+    # Extract the IP address from inside parentheses
+    ip="$(echo "$line" | grep "Nmap scan report for" | grep "(" | awk {'print $6'} | sed 's/(//' | sed 's/)//')"
+    # Call the existing ADD_SUBMENU_ITEM function
+    ADD_SUBMENU_ITEM "results" "$ip" "results_menu_${ip}"
+    ADD_SUBMENU_ITEM "results_menu_${ip}" "$hostname" "noop"
+  done
+  ADD_SUBMENU_ITEM "Quit Results" "Back"
+  SELECT_MENU results
+}
+
+
 show_results() {
  case "$NMAP_SCAN" in
+    # List
     "-sL")
       RESULTS="$(cat $LOOT_DIR/scan-$COUNT.txt | grep "Nmap scan report for" | grep '(')"
       while IFS= read -r line; do
         # Skip empty lines
         [[ -z "$line" ]] && continue
         # Extract the hostname (between "Nmap scan report for " and the first space)
-# TODO duplicate and blank host names
-        hostname=$(echo "$line" | sed -E 's/^Nmap scan report for ([^ ]+) .*/\1/')
+        # TODO duplicate and blank host names
+        hostname="$(echo "$line" | grep "Nmap scan report for" | grep "(" | awk {'print $5'})"
         # Extract the IP address from inside parentheses
-        ip=$(echo "$line" | sed -E 's/.*\(([^)]+)\).*/\1/')
-        # Call the existing add_submenu_item function
-        add_submenu_item "results" "$hostname" "results_menu_${hostname}"
-        add_submenu_item "results_menu_${hostname}" "$ip" "noop"
+        ip="$(echo "$line" | grep "Nmap scan report for" | grep "(" | awk {'print $6'} | sed 's/(//' | sed 's/)//')"
+        # Call the existing ADD_SUBMENU_ITEM function
+        ADD_SUBMENU_ITEM "results" "$ip" "results_menu_${ip}"
+        ADD_SUBMENU_ITEM "results_menu_${ip}" "$hostname" "noop"
       done <<< "$RESULTS"
-        add_submenu_item "Quit Results" "Back"
-        select_menu results
+        ADD_SUBMENU_ITEM "Quit Results" "Back"
+        SELECT_MENU results
     ;;
 
 
-    "Discovery") NMAP_SCAN="-sn" ;;
-    "Ping") NMAP_SCAN="-sP" ;;
+    "Discovery")
+      ALERT "TODO" -1 false
+    ;;
+    "Ping")
+        ALERT "TODO" -1 false
        # same as list
-    "Port") set_port_scan ;;
-    "Service") NMAP_SCAN="-sV" 
+    ;;
+    "Port")
+      ALERT "TODO" -1 false
+    ;;
+    "Service")
+      ALERT "TODO" -1 false
+    ;;
   esac
 }
 
@@ -364,5 +401,6 @@ get_config_options
   logger -t "nmap-payload" "MAX_RETRIES: $MAX_RETRIES"
   logger -t "nmap-payload" "SCAN_NETMODE: $SCAN_NETMODE"
   logger -t "nmap-payload" "SCAN_TARGET: $SCAN_TARGET"
+
 initialize_menu
-start_menu
+START_MENU
