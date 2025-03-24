@@ -1,0 +1,20 @@
+#!/bin/bash
+# Title: Simple IP Info
+# Author: Hak5Darren
+# Description: Connects via DHCP and displays the obtained IP, gateway, and subnet.
+# Usage: Plug Shark Jack into target network. Once it has a DHCP lease, info displays.
+
+LED SETUP
+source /usr/lib/spinner_tools
+CREATE_SPINNER "Starting DHCP"
+  NETMODE DHCP_CLIENT
+STOP_SPINNER
+WAIT_FOR_LINK
+WAIT_FOR_IP
+LED FINISH
+SCREEN_WRITE "IP:"
+SCREEN_WRITE "$(ip -4 addr show eth0 | awk '/inet / {print $2}' | cut -d/ -f1)"
+SCREEN_WRITE "GW:"
+SCREEN_WRITE "$(ip route | awk '/default/ {print $3}')"
+SCREEN_WRITE "CIDR:"
+SCREEN_WRITE "$(ip -4 addr show eth0 | awk '/inet / {split($2, a, "/"); print "/" a[2]}')"
