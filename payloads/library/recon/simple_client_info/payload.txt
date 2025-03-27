@@ -3,7 +3,6 @@
 # Author: Hak5
 # Description: Hosts a DHCP server and displays the hostname, IP address and MAC address of each connected client.
 # Usage: Run payload. Plug Shark Jack into target. Once the target obtains a DHCP lease, the info will display.
-
 LED SETUP
 SCREEN_WRITE "Starting DHCP"
 NETMODE DHCP_SERVER
