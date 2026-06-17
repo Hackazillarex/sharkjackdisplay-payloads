@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# Title: Network Pregnancy Test
+# Description: Humorous network diagnostic simulator using LLDP/CDP checks and randomized results
+# Author: Reda
+# Props: Cribbit, Hackazillarex, Virtual Private Coffee, Hak5Darren, jader242, The Hak5 Team
+
+
+# Configuration
+
+RANDOM_RESULT() {
+    local results=(
+        "Pregant"
+        "Pragnent"
+        "Prangent"
+        "Pargant"
+        "Gregnant"
+        "Pegnate"
+        "Pegrent"
+        "Pregegnant"
+        "Pregonate"
+        "Prengan"
+        "Pregante"
+        "Pergert"
+        "Pegnat"
+        "Pragnet"
+        "Pergenat"
+        "Pergenat"
+        "Prangnet"
+        "Pragnan"
+        "Pregnart"
+        "bregant"
+        "Pregarnt"
+        "Pregat"
+        "Fregnant"
+        "Pargnet"
+        "Peegnant"
+        "Pergnut"
+        "Pgrenant"
+        "Praganant"
+        "Prangent"
+        "Prefnat"
+        "38+2 weeks pregananant"
+        "Pregernet"
+        "Prengt"
+        "Prognant"
+        "Pretnet" 
+    )
+
+    echo "${results[$RANDOM % ${#results[@]}]}"
+}
+
+NETWORK_RESULT() {
+    local results=(
+        "404 Fetus Not Found"
+        "No route to fetus"
+        "Fetus timeout"
+        "Unable to resolve fetus"
+        "LLDP Found / CDP Found / Fetus Not Found"
+    )
+
+    echo "${results[$RANDOM % ${#results[@]}]}"
+}
+
+# Payload Start
+
+SCREEN_WRITE "Pregnancy Test"
+sleep 1
+
+resp="$(CONFIRMATION_DIALOG "Start test?" "Start")"
+
+if [ "$resp" != "Start" ]; then
+    SCREEN_WRITE "Aborted"
+    exit 0
+fi
+
+SCREEN_WRITE "Initializing test..."
+sleep 1
+
+
+CREATE_SPINNER "Detecting LLDP..."
+sleep 2
+
+CREATE_SPINNER "Detecting CDP..."
+sleep 2
+
+CREATE_SPINNER "Detecting Fetus..."
+sleep 2
+
+STOP_SPINNER
+
+chance=$((RANDOM % 100))
+
+if [ $chance -lt 60 ]; then
+    RESULT=$(RANDOM_RESULT)
+else
+    RESULT=$(NETWORK_RESULT)
+fi
+
+# Results
+
+SCREEN_WRITE "$RESULT"
+sleep 2
+
+SCREEN_WRITE "Warning:"
+sleep 1
+
+SCREEN_WRITE "Do not pee on the Shark Jack"
+sleep 2
+
+SCREEN_WRITE "Warranty may be voided"
+
+resp="$(CONFIRMATION_DIALOG "Run again?" "Restart")"
+
+if [ "$resp" = "Restart" ]; then
+    exec "$0"
+fi
+
+exit 0
